@@ -64,8 +64,12 @@ class TasksTableViewController: UITableViewController {
             let task = tasks[indexPath.row]
             let moc = CoreDataStack.shared.mainContext
             moc.delete(task)
-            
-            tableView.deleteRows(at: [indexPath], with: .fade)
+            do {
+                try moc.save()
+            } catch {
+                moc.reset()
+            }
+            tableView.reloadData()
         }
     }
 
