@@ -13,9 +13,21 @@ class TasksTableViewController: UITableViewController {
     
     // MARK: - Properties
     
+    // NOTE: This is not a good efficient way to do this, as the fetch request
+    // will be executed every time the tasks property is accessed.
+    // We will learn a better way to do this later
+    
     var tasks: [Task] {
         
         let fetchRequest: NSFetchRequest<Task> = Task.fetchRequest()
+        let moc = CoreDataStack.shared.mainContext
+        
+        do {
+            return try moc.fetch(fetchRequest)
+        } catch {
+            NSLog("Error fetching task: \(error)")
+            return []
+        }
     }
     
     // MARK: - Lifecycle functions
@@ -30,11 +42,14 @@ class TasksTableViewController: UITableViewController {
     // MARK: - Table view data source
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return 0
+        return tasks.count
     }
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "TaskCell", for: indexPath)
+        let task = tasks[indexPath.row]
+        
+        cell.textLabel?.text = task.name
         
         return cell
     }
@@ -43,12 +58,15 @@ class TasksTableViewController: UITableViewController {
     // MARK: - Edit row
     
     override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
+        
         if editingStyle == .delete {
-            // Delete the row from the data source
+            
+            let task = tasks[indexPath.row]
+            let moc = CoreDataStack.shared.mainContext
+            moc.delete(task)
+            
             tableView.deleteRows(at: [indexPath], with: .fade)
-        } else if editingStyle == .insert {
-            // Create a new instance of the appropriate class, insert it into the array, and add a new row to the table view
-        }    
+        }
     }
 
 
@@ -57,5 +75,4 @@ class TasksTableViewController: UITableViewController {
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         
     }
-
 }
